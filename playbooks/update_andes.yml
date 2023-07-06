@@ -1,0 +1,37 @@
+# Update the andes code from git.
+# will perform migrations, make messages and build the web static files
+---
+
+  ################
+- name: andes-web Install apt software dependencies
+  hosts: andes-web
+  ################
+  tasks:
+
+    - name: Git init, clone the repo
+      git:
+        repo: git@github.com:dfo-gulf-science/andes.git
+        accept_hostkey: true
+        key_file: /root/.ssh/id_rsa_andes
+        dest: "{{ andes_dir }}/"
+          
+    - name: pip install requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/requirements.txt"
+
+    - name: pip install special requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/special_requirements.txt"
+
+    - name: Django Check
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py check
+
+    - name: Django Migrate
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py migrate
+
+    - name: Django compilemessages
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py compilemessages
+
+    - name: Django collectstatic
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
+

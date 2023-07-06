@@ -1,0 +1,71 @@
+# Download the fixtures from gulf-andes-preprod and place them under ./fixtures/andes_sha_date.json.zip
+# This playbook will find the most recent one and update them for this instance.
+# The fixture file must not be renamed, and nees to have the Git SHA as part of the filename.
+# Keep the fixture in a zip format
+# This playbook will make a backup before attempting to update the fixtures.
+
+---
+
+  ################
+- name: andes-web update fixtures
+  hosts: andes-web
+  ################
+
+
+  vars:
+    fixture_files: "{{ lookup('fileglob', '../fixtures/*json.zip', wantlist=True) }}"
+    fixture_full_filename: "{{ fixture_files| sort(attribute='mtime') | last }}"
+    fixture_filename: "{{ (fixture_full_filename | split('/'))[-1] }}"
+    git_sha: "{{ (fixture_filename | split('_'))[1] }}"
+    backup_base_name: "andes_{{ git_sha }}_{{ ansible_date_time.iso8601 }}"
+
+  tasks:
+
+    - name: Print recent fixture
+      debug:
+        msg: "The most recent fixture found was: {{ backup_base_name }}"
+
+    - name: Print Git SHA
+      debug:
+        msg: "It has the git SHA of {{ git_sha }}"
+
+    # first, make a backup
+    - name: Make database backup
+      command: "/usr/bin/python3 {{ andes_dir }}/manage.py dumpdata --exclude auth.permission --exclude contenttypes --exclude sessions -o {{ andes_dir }}/{{ backup_base_name }}.json.gz"
+
+    - name: Ensure backup exists
+      stat:
+        path: "{{ andes_dir }}/{{ backup_base_name }}.json.gz"
+      register: file_status
+      failed_when: not file_status.stat.exists
+
+    - name: Git, checkout the correct Andes version for the fixture
+      git:
+        repo: git@github.com:dfo-gulf-science/andes.git
+        accept_hostkey: true
+        key_file: /root/.ssh/id_rsa_andes
+        dest: "{{ andes_dir }}/"
+        version: "{{ git_sha }}"
+         
+    - name: Copy fixtures 
+      copy:
+        src: "../fixtures/{{ fixture_filename }}"
+        owner: root
+        group: root
+        dest: "{{ andes_dir }}/{{ fixture_filename }}"
+
+    # todo: drop tables and start over?
+    - name: Django Check
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py check
+
+    - name: Django Migrate
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py migrate
+
+    - name: Django loaddata
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py loaddata "{{ andes_dir }}/{{ fixture_filename }}"
+
+    - name: Django compilemessages
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py compilemessages
+
+    - name: Django collectstatic
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input

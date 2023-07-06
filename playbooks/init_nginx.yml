@@ -1,0 +1,41 @@
+# installs a reverse proxy to handle web requests to the host.
+# As of now, it simply forwards requests to the andes-web container
+# More exotic configurations are planned, as this host will serve more than one webapp
+# To work, lxc must forward all web requests to this container.
+# i.e., use the proxy-web lxc profile.
+---
+
+  ################
+- name: nginxproxy Install apt software dependencies
+  hosts: nginx-proxy
+  ################
+
+  tasks:
+    - name: Install nginx
+      apt:
+        update_cache: yes
+        pkg: 
+          - nginx
+          - ssl-cert
+        state: present
+
+    - name: Disable nginx default
+      file:
+        path: /etc/nginx/sites-enabled/default
+        state: absent
+
+    - name: write gninx site conf from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/nginx_conf.j2
+        dest: /etc/nginx/nginx.conf
+        owner: root
+        group: root
+
+    # - name: create log files
+
+    - name: Restart nginx
+      service:
+        name: nginx
+        state: restarted
+        enabled: true
+

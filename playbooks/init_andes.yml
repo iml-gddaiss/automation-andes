@@ -1,0 +1,192 @@
+# Setup two containers (andes-web and andes-db) as web and database server
+# Web request must be forwarded to the andes-web container.
+# Either attach the proxy-web profile, or configure the nginx-proxy container.
+# The andes-web container will need a github deploy key to download the code.
+# Supply the private part of the key as ./files/id_rsa_andes
+# and it will be copied to the container
+# to update the code/fixtures, use the update_fixtures.yaml playbook
+---
+
+  ################
+- name: andes-db Install apt software dependencies
+  hosts: andes-db
+  ################
+
+  tasks:
+    - name: Install MySQL
+      apt:
+        update_cache: yes
+        pkg: 
+          - mysql-server
+          - python3-mysqldb #needed to interact with the db
+        state: present
+
+    - name: ensure mysql is configured to bind to the specified address and port
+      ini_file:
+        dest: /etc/mysql/my.cnf
+        section: mysqld
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      # register: my_cnf
+      with_items:
+        - { option: bind-address, value: "{{ db_host }}" }
+        # consider all
+        # - { option: bind-address, value: 0.0.0.0 } 
+
+    - name: update mysql root password for local root account
+      mysql_user: 
+        name: root 
+        host: localhost 
+        priv: "*.*:ALL,GRANT"
+        state: present
+
+    - name: write mysqlconf from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/mysql_conf.j2
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: restart the mysql service 
+      shell: "service mysql restart"
+
+    - name: ensure mysql is enabled to run on startup 
+      service: 
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: create the database
+      mysql_db: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_name }}"
+        state: present
+
+    - name: create the andes root user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_user }}"
+        password: "{{ db_password }}"
+        # restrict this user to andes-web container 
+        host: "{{ web_host }}"
+        priv: "{{ db_name }}.*:ALL,GRANT"
+        state: present
+
+    - name: create the a read-only debugging user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_user }}"
+        password: "{{ db_ro_password }}"
+        host: "%"
+        priv: "{{ db_name }}.*:SELECT,GRANT"
+        state: present
+
+
+
+  ################
+- name: andes-web Install apt software dependencies
+  hosts: andes-web
+  ################
+
+  tasks:
+    - name: Install apt requirements
+      apt:
+        update_cache: yes
+        pkg: 
+          - git
+          - apache2
+          - libapache2-mod-wsgi-py3
+          - python3
+          - python3-pip
+          - gettext 
+          - libapache2-mod-wsgi-py3
+          - redis
+          - default-libmysqlclient-dev
+          # these are needed for printer
+          - cups
+          - libcups2-dev 
+          # these are required for building Pillow
+          - python3-dev
+          - python3-setuptools
+          - libjpeg8-dev 
+        state: present
+ 
+    - name: Git init, make ssh dir
+      file:
+        path: /root/.ssh/
+        state: directory
+
+    - name: Git init, Copy private key
+      copy:
+        src: ../files/id_rsa_andes
+        dest: /root/.ssh/id_rsa_andes
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: Git init, Copy config file
+      copy: 
+        src: ../files/ssh_config
+        dest: /root/.ssh/config
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Git init, clone the repo
+      git:
+        repo: git@github.com:dfo-gulf-science/andes.git
+        accept_hostkey: true
+        key_file: /root/.ssh/id_rsa_andes
+        dest: "{{ andes_dir }}/"
+         
+    - name: pip install requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/requirements.txt"
+
+    - name: pip install special requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/special_requirements.txt"
+
+    - name: write .env from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/andes_env.j2
+        dest: "/{{ andes_dir }}/.env"
+        owner: root
+        group: root
+
+    - name: Django Check
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py check
+
+    - name: Django Migrate
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py migrate
+
+    - name: Django compilemessages
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py compilemessages
+
+    - name: Django collectstatic
+      command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
+      # notify: Reload Apache
+
+    - name: Set up Apache 
+      copy:
+        src: ../files/apache_conf
+        dest: /etc/apache2/sites-available/000-default.conf
+        owner: root
+        group: root
+      # notify: Reload Apache
+
+    - name: Reload Apache 
+      service:
+        name: apache2
+        state: reloaded
+
+  # handlers:
+  #   - name: Reload Apache
+  #     service:
+  #       name: apache2
+  #       state: reloaded
+
