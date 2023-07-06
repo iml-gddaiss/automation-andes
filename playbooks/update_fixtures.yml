@@ -6,12 +6,8 @@
 
 ---
 
-  ################
-- name: andes-web update fixtures
+- name: update fixtures / restore backup
   hosts: andes-web
-  ################
-
-
   vars:
     fixture_files: "{{ lookup('fileglob', '../fixtures/*json.zip', wantlist=True) }}"
     fixture_full_filename: "{{ fixture_files| sort(attribute='mtime') | last }}"
@@ -20,7 +16,6 @@
     backup_base_name: "andes_{{ git_sha }}_{{ ansible_date_time.iso8601 }}"
 
   tasks:
-
     - name: Print recent fixture
       debug:
         msg: "The most recent fixture found was: {{ backup_base_name }}"

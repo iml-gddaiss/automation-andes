@@ -2,10 +2,8 @@
 # will perform migrations, make messages and build the web static files
 ---
 
-  ################
-- name: andes-web Install apt software dependencies
+- name: Update Andes
   hosts: andes-web
-  ################
   tasks:
 
     - name: Git init, clone the repo
