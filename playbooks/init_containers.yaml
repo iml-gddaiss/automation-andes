@@ -1,0 +1,50 @@
+# This playbook will create the lxc containers to host Andes stack
+# andes-web
+# andes-db
+# nginx-proxy
+---
+
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  tasks:
+
+  - name: create containers
+    with_items:
+    - "{{ groups['local'] }}"
+    lxd_container:
+        name: "{{ item }}"
+        # name: test
+        type: container
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          # protocol: lxd # if you get a 404, try setting protocol: simplestreams
+          protocol: simplestreams
+          alias: ubuntu/jammy/amd64
+          
+        config:
+          image.variant: default
+          limits.cpu: 4
+          limits.memory: 8GB
+          limits.memory.swap: "true"
+
+        devices: 
+          eth0:
+              type: nic
+              nictype: bridged
+              parent: lxdbr0
+          root:
+              path: /
+              pool: default
+              size: 30GB
+              type: disk
+
+        state: started
+  - name: Set the hostnames
+    with_items:
+    - "{{ groups['local'] }}"
+    delegate_to: "{{ item }}"
+    ansible.builtin.hostname:
+      name: "{{ item }}"
