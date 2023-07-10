@@ -7,7 +7,7 @@ The services are broken up into three LXC containers:
  - reverse proxy: `gninx-proxy`
 The containers all run on the same server hardware running a CDOS manage Linux image.
 
-The architecture is show in the [![system diagram](system-diagram.svg)](system-diagram.svg)
+The architecture is show in the [![system diagram](system_diagram.svg)](system_diagram.svg)
 The lxc containers are shown are circles and lxc profiles (attached to the containers) are shown as rectangles.
 Ansible creates an manages the containers and profiles.
 The Ansible playbooks can either be executed from a controller (option 1) or directly from the server (options 2). 
