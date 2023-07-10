@@ -1,0 +1,90 @@
+# This playbook will create the lxc containers to host Andes stack
+# andes-web
+# andes-db
+# nginx-proxy
+---
+
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  tasks:
+    
+  - name: create proxy-80 profile (destined for nginx)
+    community.general.lxd_profile:
+      name: proxy-80
+      state: present
+      config: {}
+      description: reverse proxy for port 80
+      devices:
+        hostport80:
+          connect: tcp:127.0.0.1:80
+          listen: tcp:0.0.0.0:80
+          type: proxy
+
+  - name: create proxy-3306 profile (destined for gninx)
+    community.general.lxd_profile:
+      name: proxy-3306
+      state: present
+      config: {}
+      description: reverse proxy for port 3306
+      devices:
+        hostport80:
+          connect: tcp:127.0.0.1:3306
+          listen: tcp:0.0.0.0:3306
+          type: proxy
+
+  - name: create proxy-33060 profile (destined for gninx)
+    community.general.lxd_profile:
+      name: proxy-33060
+      state: present
+      config: {}
+      description: reverse proxy for port 33060 
+      devices:
+        hostport80:
+          connect: tcp:127.0.0.1:33060
+          listen: tcp:0.0.0.0:33060
+          type: proxy
+
+  # TODO: do not use the same profile, see github issue #3
+  - name: create default profile (for all containers)
+    community.general.lxd_profile:
+      name: andes-default
+      state: present
+      config:
+        limits.cpu: "4"
+        limits.memory: 8GB
+        limits.memory.swap: "true"
+      description: Default container instance profile
+      devices:
+        eth0:
+          name: eth0
+          network: lxdbr0
+          type: nic
+        root:
+          path: /
+          pool: default
+          size: 30GB
+          type: disk
+
+  - name: create containers
+    with_items:
+    - "{{ groups['local'] }}"
+    lxd_container:
+        name: "{{ item }}"
+        type: container
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: ubuntu/jammy/amd64
+        profiles: ["andes-default"]
+        state: started
+
+  - name: Set the hostnames
+    with_items:
+    - "{{ groups['local'] }}"
+    delegate_to: "{{ item }}"
+    ansible.builtin.hostname:
+      name: "{{ item }}"
+  

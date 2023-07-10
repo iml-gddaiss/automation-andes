@@ -32,17 +32,34 @@ ansible-playbook playbook.yml
 ```
 
 ## Manual stuff (todo: automate this)
-- private andes deploy key, make sure there is `./files/id_rsa_andes` under
+### Disable hibernation
+CDOS Linux images may suspend and/or hibernate, you may want to [disable this](https://www.tecmint.com/disable-suspend-and-hibernation-in-linux/) if the station willbe used as a server.
 
-- need to create the containers
- ```
+``` bash
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
+### update ansible plugins
+The controller (system where scripts are executed) should have an updated version of the plugins,
+``` bash
+ansible-galaxy collection install community.general -f
+```
+
+### make a deploy key (to obtain Andes source code)
+Create a private/public key pair and place let github use it as a deploy key.
+One of the playbooks will copy the key to the right container, simply place the private part under `./files/id_rsa_andes`.
+
+
+### (obsolete) create the containers
+NOTE: This is now automated using the `init_containers.yml` playbook, it's kept here in case manual interfention is needed.
+
+``` bash
 lxc launch ubuntu:22.04 andes-web
 lxc launch ubuntu:22.04 andes-db
 lxc launch ubuntu:22.04 nginx-proxy
-ansible-galaxy collection install community.general -f
+```
 
-# Make these containers available outside
-attach the proxy profiles
+attach the proxy profiles to forward incomming requests, in this case example it is `andes-web` and `andes-db`, but both should be pointing to `gninx-proxy`
 ``` bash
 lxc profile add andes-web proxy-web 
 lxc profile add andes-db proxy-db
@@ -70,11 +87,26 @@ devices:
     type: proxy
 name: proxy-db
 ```
-# Upload new fixtures from andes-preprod-east
 
-Download and dump the fixtures (as a zip file) in `./fixtures/`
+# Playbooks
+## 1. `init_containers.yml`
+Will create 3 containers `andes-web`, `andes-web` and `gninx-proxy`.
 
-The `update_fixtures.yaml` playbook script will take care of finding the most recent one and will send it to the container to be loaded. Note that a backup of the older database will be made, before it is dropped.
+## 2. `config_andes_db.yml`
+Will configure a MySQL server in the `andes-db` container
+
+## 3. `config_andes_web.yml`
+Will download the andes source code and configure a webserver in the `andes-web` container
+
+## 4. `config_gninx.yml`
+Will configure a reverse proxy in the `nginx-proxy` container.
+
+## 5. `update_andes.yml`
+Will update the andes instance: pull new code into `andes-web` and perform migrations.
+
+## 6. `update_fixtures.yml`
+Will restore using the most recent a backup found under `./fixtures`.
+This will wipe the database and restore whatever was in the backup. A backup will be performed before attempting the restore.
 
 # TODO:
 - time server

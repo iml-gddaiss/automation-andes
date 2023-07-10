@@ -66,8 +66,8 @@
       mysql_user: 
         login_user: root
         login_password: "{{ db_root_password }}"
-        name: "{{ db_user }}"
-        password: "{{ db_password }}"
+        name: "{{ db_user_name }}"
+        password: "{{ db_user_password }}"
         # restrict this user to andes-web container 
         host: "{{ web_host }}"
         priv: "{{ db_name }}.*:ALL,GRANT"
@@ -77,7 +77,7 @@
       mysql_user: 
         login_user: root
         login_password: "{{ db_root_password }}"
-        name: "{{ db_user }}"
+        name: "{{ db_user_name }}"
         password: "{{ db_ro_password }}"
         host: "%"
         priv: "{{ db_name }}.*:SELECT,GRANT"
