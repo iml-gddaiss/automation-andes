@@ -16,3 +16,7 @@ In both cases there has to be an SSH connection, i.e., ansible uses SSH for opti
 
 The diagram shows that other services may exist on the server, (e.g., another web app stack (called Specify) or some other database sever).
 These are shown as lxc containers as well, but are not managed by the Ansible scripts containes in this repository.
+
+The diagram shows that the `nginx-proxy` container manages all connections to the different hosted services. This configuration will have to be manually realized, as the setup contained herin only manages traffic for andes.
+
+Alternatively, the nginx container (dedicated to andes) can be bypassed by pointing the lxc proxies straight to the containers offering the other services ( extra DB and the Specify stack).
