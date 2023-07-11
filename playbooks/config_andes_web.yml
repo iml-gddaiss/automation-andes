@@ -12,6 +12,7 @@
 - name: Andes webserver Install apt software dependencies
   hosts: andes-web
   tasks:
+
     - name: Install apt requirements
       apt:
         update_cache: yes
@@ -34,6 +35,75 @@
           - libjpeg8-dev 
         state: present
  
+  ### START setup CELERY
+
+    - name: Ensure celery group exists
+      ansible.builtin.group:
+        name: celery
+        state: present
+
+    - name: Add the celery user
+      ansible.builtin.user:
+        name: celery
+        comment: user for managing celery daemon
+        create_home: false
+        password: '!' # disabled password
+        groups: celery, www-data
+
+    - name: Create the celery conf
+      ansible.builtin.template:
+        src: ../templates/celeryd_conf.j2
+        dest: /etc/default/celeryd
+        owner: root
+        group: root
+
+    - name: Create the run directory
+      ansible.builtin.file:
+          path: /var/run/celery
+          state: directory
+          mode: 0771 # go rwx
+          group: www-data
+
+    - name: Create the celery log directory
+      ansible.builtin.file:
+          path: /var/log/celery
+          state: directory
+          mode: 0771 # go rwx
+          group: www-data
+
+    - name: Enable and start red-s-server
+      ansible.builtin.systemd:
+        name:  redis-server.service
+        state: started
+        enabled: true
+
+    - name: write celery systemd service from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/celeryd_service.j2
+        dest: /etc/systemd/system/celeryd.service
+        owner: root
+        group: root
+
+    - name: write celery beat systemd service from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/celerybeat_service.j2
+        dest: /etc/systemd/system/celerybeat.service
+        owner: root
+        group: root
+
+    - name: Enable and start celeryd.service
+      ansible.builtin.systemd:
+        name:  celeryd.service
+        state: started
+        enabled: true
+
+    - name: Enable and start celerybeat.service
+      ansible.builtin.systemd:
+        name:  celerybeat.service
+        state: started
+        enabled: true
+    ### END setup CELERY
+
     - name: Git init, make ssh dir
       file:
         path: /root/.ssh/
@@ -58,6 +128,7 @@
     - name: Git init, clone the repo
       git:
         repo: git@github.com:dfo-gulf-science/andes.git
+        force: true
         accept_hostkey: true
         key_file: /root/.ssh/id_rsa_andes
         dest: "{{ andes_dir }}/"
@@ -76,6 +147,18 @@
         dest: "/{{ andes_dir }}/.env"
         owner: root
         group: root
+
+    - name: Create the tmp directory
+      ansible.builtin.file:
+          path: "/{{ andes_dir }}/media/temp"
+          state: directory
+          mode: '0770' # go rwx
+          group: www-data
+          owner: www-data   
+    #
+    # Need to add this to settings/py
+    #CSRF_TRUSTED_ORIGINS = ['http://iml-science-1.ent.dfo-mpo.ca']
+    #
 
     - name: Django Check
       command: /usr/bin/python3 {{ andes_dir }}/manage.py check

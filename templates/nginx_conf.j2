@@ -74,8 +74,7 @@ http {
             location / {
                 # remove the andes/ part from the path 
                 # rewrite andes/(.*) /$1 break;
-                # root /var/www/html/;
-                proxy_pass http://{{ web_host}}:80;
+                proxy_pass http://{{ web_host }}:80/;
                 proxy_set_header Authorization "";
                 proxy_read_timeout 90s;
             }
