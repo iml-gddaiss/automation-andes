@@ -9,6 +9,7 @@
     - name: Git init, clone the repo
       git:
         repo: git@github.com:dfo-gulf-science/andes.git
+        force: true
         accept_hostkey: true
         key_file: /root/.ssh/id_rsa_andes
         dest: "{{ andes_dir }}/"
