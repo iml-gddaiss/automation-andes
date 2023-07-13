@@ -34,9 +34,56 @@
           - python3-setuptools
           - libjpeg8-dev 
         state: present
- 
-  ### START setup CELERY
 
+    - name: Git init, make ssh dir
+      file:
+        path: /root/.ssh/
+        state: directory
+
+    - name: Git init, Copy private key
+      copy:
+        src: ../files/id_rsa_andes
+        dest: /root/.ssh/id_rsa_andes
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: Git init, Copy config file
+      copy: 
+        src: ../files/ssh_config
+        dest: /root/.ssh/config
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Git init, clone the repo
+      git:
+        repo: git@github.com:dfo-gulf-science/andes.git
+        force: true
+        accept_hostkey: true
+        key_file: /root/.ssh/id_rsa_andes
+        dest: "{{ andes_dir }}/"
+         
+    - name: pip install requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/requirements.txt"
+
+    - name: pip install special requirements
+      ansible.builtin.pip:
+        requirements: "{{ andes_dir }}/special_requirements.txt"
+
+    - name: write .env from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/andes_env.j2
+        dest: "/{{ andes_dir }}/.env"
+        owner: root
+        group: root
+
+    # Need to add this to settings/py
+    #CSRF_TRUSTED_ORIGINS = ['http://iml-science-1.ent.dfo-mpo.ca']
+    #SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+  ### START setup CELERY
     - name: Ensure celery group exists
       ansible.builtin.group:
         name: celery
@@ -103,62 +150,6 @@
         state: started
         enabled: true
     ### END setup CELERY
-
-    - name: Git init, make ssh dir
-      file:
-        path: /root/.ssh/
-        state: directory
-
-    - name: Git init, Copy private key
-      copy:
-        src: ../files/id_rsa_andes
-        dest: /root/.ssh/id_rsa_andes
-        owner: root
-        group: root
-        mode: 0600
-
-    - name: Git init, Copy config file
-      copy: 
-        src: ../files/ssh_config
-        dest: /root/.ssh/config
-        owner: root
-        group: root
-        mode: 0644
-
-    - name: Git init, clone the repo
-      git:
-        repo: git@github.com:dfo-gulf-science/andes.git
-        force: true
-        accept_hostkey: true
-        key_file: /root/.ssh/id_rsa_andes
-        dest: "{{ andes_dir }}/"
-         
-    - name: pip install requirements
-      ansible.builtin.pip:
-        requirements: "{{ andes_dir }}/requirements.txt"
-
-    - name: pip install special requirements
-      ansible.builtin.pip:
-        requirements: "{{ andes_dir }}/special_requirements.txt"
-
-    - name: write .env from jinja2 template
-      ansible.builtin.template:
-        src: ../templates/andes_env.j2
-        dest: "/{{ andes_dir }}/.env"
-        owner: root
-        group: root
-
-    - name: Create the tmp directory
-      ansible.builtin.file:
-          path: "/{{ andes_dir }}/media/temp"
-          state: directory
-          mode: '0770' # go rwx
-          group: www-data
-          owner: www-data   
-    #
-    # Need to add this to settings/py
-    #CSRF_TRUSTED_ORIGINS = ['http://iml-science-1.ent.dfo-mpo.ca']
-    #
 
     - name: Django Check
       command: /usr/bin/python3 {{ andes_dir }}/manage.py check
