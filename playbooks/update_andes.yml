@@ -23,6 +23,16 @@
       ansible.builtin.pip:
         requirements: "{{ andes_dir }}/special_requirements.txt"
 
+    - name: add tweak in settings.py
+      ansible.builtin.lineinfile:
+        path: "{{ andes_dir}}/andes/settings.py"
+        line: SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+    
+    - name: add another tweak in settings.py
+      ansible.builtin.lineinfile:
+        path: "{{ andes_dir}}/andes/settings.py"
+        line: CSRF_TRUSTED_ORIGINS = ['http://iml-science-1.ent.dfo-mpo.ca']
+
     - name: Django Check
       command: /usr/bin/python3 {{ andes_dir }}/manage.py check
 
