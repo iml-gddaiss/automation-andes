@@ -13,6 +13,7 @@
         accept_hostkey: true
         key_file: /root/.ssh/id_rsa_andes
         dest: "{{ andes_dir }}/"
+        version: stage
           
     - name: pip install requirements
       ansible.builtin.pip:
@@ -33,4 +34,10 @@
 
     - name: Django collectstatic
       command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
+
+    - name: Reload Apache 
+      service:
+        name: apache2
+        state: reloaded
+
 
