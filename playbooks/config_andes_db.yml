@@ -60,6 +60,8 @@
         login_user: root
         login_password: "{{ db_root_password }}"
         name: "{{ db_name }}"
+        collation: Latin1_general_CI_AI;
+        encoding: utf8mb4
         state: present
 
     - name: create the andes root user
