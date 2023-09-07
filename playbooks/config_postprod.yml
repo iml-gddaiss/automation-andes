@@ -1,17 +1,116 @@
-# The Andes stack needs two containers andes-web webserver and andes-db database server
-# Web request must be forwarded to the andes-web container.
-# The andes-web container must access andes-db
-# An additional nginx-proxy container will forward web requests to andes-web
-# Optional database (read-only) connections to the database can be made via the proxy.
-# The andes-web container will need a github deploy key to download the code.
-# Supply the private part of the key as ./files/id_rsa_andes
-# and it will be copied to the container
-# to update the code/fixtures, use the update_fixtures.yaml playbook
+# This playbook will create a singel lxc container to host a monolthic Andes stack
+# The container is meant ot be used as a post-prod instaces for post-prod validation
+# andes-web
+# andes-db
+# nginx-proxy
 ---
 
-- name: Andes webserver Install apt software dependencies
-  hosts: andes-web
+- name: config monolithic andes deployment
+  hosts: IML-2023-027
+  vars:
+    git_sha: "{{ (fixture_filename | split('_'))[2] }}"
+
   tasks:
+
+#### DATABASE
+
+    - name: Print vars
+      ansible.builtin.debug:
+        msg: "git_sha: {{ git_sha }}"
+
+    - name: Print vars
+      ansible.builtin.debug:
+        msg: "fixture_filename: {{ fixture_filename }}"
+
+    - name: Print vars
+      ansible.builtin.debug:
+        msg: "web_port: {{ web_port }}"
+
+    - name: Install MySQL
+      apt:
+        update_cache: yes
+        pkg: 
+          - mysql-server
+          - python3-mysqldb #needed to interact with the db
+        state: present
+
+    - name: ensure mysql is configured to bind to the specified address and port
+      ini_file:
+        dest: /etc/mysql/my.cnf
+        section: mysqld
+        option: "{{ item.option }}"
+        value: "{{ item.value }}"
+      # register: my_cnf
+      with_items:
+        - { option: bind-address, value: localhost }
+        # consider allowing external connections 
+        # - { option: bind-address, value: 0.0.0.0 } 
+
+    - name: update mysql root password for local root account
+      mysql_user: 
+        name: root 
+        host: localhost 
+        priv: "*.*:ALL,GRANT"
+        state: present
+
+    - name: write mysqlconf from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/mysql_conf.j2
+        dest: /root/.my.cnf
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: restart the mysql service 
+      shell: "service mysql restart"
+
+    - name: ensure mysql is enabled to run on startup 
+      service: 
+        name: mysql
+        state: started
+        enabled: true
+
+    - name: create the database
+      mysql_db: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_name }}"
+        collation: utf8mb4_bin
+        encoding: utf8mb4
+        state: present
+
+    - name: create the andes root user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_user_name }}"
+        password: "{{ db_user_password }}"
+        # restrict this user to localhost 
+        host: "localhost"
+        priv: "{{ db_name }}.*:ALL,GRANT"
+        state: present
+
+    - name: create the a read-only user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_ro_user_name }}"
+        password: "{{ db_ro_password }}"
+        host: "%"
+        priv: "{{ db_name }}.*:SELECT, SHOW VIEW"
+        state: present
+
+    - name: create the a read-write user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_rw_user_name }}"
+        password: "{{ db_rw_password }}"
+        host: "%"
+        priv: "{{ db_name }}.*:DELETE, INSERT, UPDATE, SELECT, SHOW VIEW"
+        state: present
+
+#### WEB
 
     - name: Install apt requirements
       apt:
@@ -62,6 +161,7 @@
         force: true
         accept_hostkey: true
         key_file: /root/.ssh/id_rsa_andes
+        version: "{{ git_sha }}"
         dest: "{{ andes_dir }}/"
          
     - name: pip install requirements
@@ -170,22 +270,25 @@
       command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
       # notify: Reload Apache
 
-    - name: Set up Apache 
+    - name: Copy fixtures 
       copy:
-        src: ../files/apache_conf
+        src: "../fixtures/{{ fixture_filename }}"
+        owner: root
+        group: root
+        dest: "{{ andes_dir }}/{{ fixture_filename }}"
+
+    - name: Django loaddata
+      command: "/usr/bin/python3 {{ andes_dir }}/manage.py loaddata {{ andes_dir }}/{{ fixture_filename }}"
+
+    - name: Set up Apache 
+      ansible.builtin.template:
+        src: ../templates/apache_conf.j2
         dest: /etc/apache2/sites-available/000-default.conf
         owner: root
         group: root
-      # notify: Reload Apache
 
     - name: Reload Apache 
       service:
         name: apache2
         state: reloaded
-
-  # handlers:
-  #   - name: Reload Apache
-  #     service:
-  #       name: apache2
-  #       state: reloaded
 

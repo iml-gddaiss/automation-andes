@@ -1,0 +1,20 @@
+ansible_connection: lxd
+ansible_user: root
+ansible_become: no
+ansible_lxd_remote: local
+
+# variables for post-prod instances
+db_user_name: andes_user # connection access restricted from local host (django account)
+db_user_password: ENTER_ANDES_PASSWORD_HERE 
+
+db_rw_user_name: lecture_ecriture # allow external, read-write
+db_rw_password: ENTER_RO_PASSWORD_HERE 
+
+db_ro_user_name: lecture_seulement # allow external, read-only
+db_ro_password: ENTER_RO_PASSWORD_HERE
+
+db_root_password: ENTER_ROOT_PASSWORD_HERE # db root, can only log-in from local host
+db_name: andesdb
+db_port: 3306
+db_host: localhost
+andes_dir: /opt/andes
