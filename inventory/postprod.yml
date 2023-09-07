@@ -1,0 +1,38 @@
+---
+# change this to match postprod instance name
+
+cabot2023:
+  vars:
+    ansible_connection: lxd
+    ansible_user: root
+    ansible_become: no
+    ansible_lxd_remote: local
+
+    web_port: 8011
+    # variables for post-prod instances
+    db_django_user_name: andes_user # connection access restricted from local host (django account)
+    db_django_user_password: ENTER_ANDES_PASSWORD_HERE 
+
+    db_rw_user_name: lecture_ecriture # allow external, read-write
+    db_rw_password: ENTER_RO_PASSWORD_HERE 
+
+    db_rw_user_name: lecture_seulement # allow external, read-only
+    db_ro_password: ENTER_RO_PASSWORD_HERE
+
+    db_root_password: ENTER_ROOT_PASSWORD_HERE # db root, can only log-in from local host
+    db_name: andesdb
+    db_port: 3306
+
+# add the webport, make sure it is unique
+local:
+  vars:
+    cabot2023:
+      web_port: 8011
+
+postprod:
+  children:
+    local:
+      hosts:
+        # change this to match postprod instance name
+        cabot2023:
+

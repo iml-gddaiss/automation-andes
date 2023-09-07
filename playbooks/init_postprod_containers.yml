@@ -1,49 +1,26 @@
-# This playbook will create the lxc containers to host Andes stack
-# andes-web
-# andes-db
-# nginx-proxy
+# This playbook will create a singel lxc container to host a monolthic Andes stack
+# The container is meant ot be used as a post-prod instaces for post-prod validation
 ---
 
 - hosts: localhost
   # run this task in the host
   connection: local
   tasks:
-    
-  - name: create proxy-80 profile (destined for nginx)
+
+  - name: create web-proxy profile
+    with_items:
+    - "{{ groups['postprod'] }}"
     community.general.lxd_profile:
-      name: proxy-80
+      name: "{{ item }}-webproxy"
       state: present
       config: {}
-      description: reverse proxy for port 80
+      description: "reverse web proxy on port {{ hostvars[item][item]['web_port'] }}"
       devices:
         hostport80:
           connect: tcp:127.0.0.1:80
-          listen: tcp:0.0.0.0:80
+          listen: "tcp:0.0.0.0:{{ hostvars[item][item]['web_port'] }}"
           type: proxy
 
-  - name: create proxy-3306 profile (destined for gninx)
-    community.general.lxd_profile:
-      name: proxy-3306
-      state: present
-      config: {}
-      description: reverse proxy for port 3306
-      devices:
-        hostport80:
-          connect: tcp:127.0.0.1:3306
-          listen: tcp:0.0.0.0:3306
-          type: proxy
-
-  - name: create proxy-33060 profile (destined for gninx)
-    community.general.lxd_profile:
-      name: proxy-33060
-      state: present
-      config: {}
-      description: reverse proxy for port 33060 
-      devices:
-        hostport80:
-          connect: tcp:127.0.0.1:33060
-          listen: tcp:0.0.0.0:33060
-          type: proxy
 
   # TODO: do not use the same profile, see github issue #3
   - name: create default profile (for all containers)
@@ -68,7 +45,7 @@
 
   - name: create containers
     with_items:
-    - "{{ groups['main'] }}"
+    - "{{ groups['postprod'] }}"
     lxd_container:
         name: "{{ item }}"
         type: container
@@ -83,7 +60,7 @@
 
   - name: Set the hostnames
     with_items:
-    - "{{ groups['main'] }}"
+    - "{{ groups['postprod'] }}"
     delegate_to: "{{ item }}"
     ansible.builtin.hostname:
       name: "{{ item }}"
