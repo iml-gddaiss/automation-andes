@@ -31,6 +31,27 @@ now run the playbook
 ansible-playbook playbook.yml
 ```
 
+## deploying a monolithic Postprod instance
+For postprod instances, it's easier/simpler to follow the monolithic system architecture described in the in the docs.
+
+1. Prep files and container
+ - create a yaml under `./inventory/host_vars/<MISSION>.yml`
+ - looking at the other examples, define `fixture_filename` and `web_port` variables
+ - place the fixture in `./fixtures/` directory (make sure it has the same name as defined)
+ - run the init_postprod_containers playbook, and make sure the containers and profiles are there:
+
+ ```
+ ansible-playbook playbooks/init_postprod_containers.yml
+ # check for the mission container
+ lxc ls 
+ # check for web proxy profil (for the mission container)
+ lxf profile ls
+
+ ```
+2. config the container
+- host in config_postpro.yml (consider copying as a new file)
+ ansible-playbook playbooks/config_postprod.yml 
+ 
 ## Manual stuff (todo: automate this)
 ### Disable hibernation
 CDOS Linux images may suspend and/or hibernate, you may want to [disable this](https://www.tecmint.com/disable-suspend-and-hibernation-in-linux/) if the station willbe used as a server.

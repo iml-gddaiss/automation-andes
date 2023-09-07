@@ -1,4 +1,4 @@
-# System architecture
+# Main System architecture
 
 The Andes stack is completely containerized.
 The services are broken up into three LXC containers:
@@ -28,3 +28,9 @@ Thus limiting all activity to only web-app queries.
 External connections are allowed however for debugging and development purposes.
 This access can be eliminated by i) reconfiguration of the reverse proxy and/or ii) changing the "host" of the MySQL database user.
 
+# Post-prod system architechture
+A post-prod instance (dedicated to a single mission) can be setup using the mission backup/fixture.
+
+For this we use the monolithic system architcutre where the DB and WEB server are part of the same lxc container.
+
+[![monolithic system diagram](monolithic_system_diagram.svg)](monolithic_system_diagram.svg)
