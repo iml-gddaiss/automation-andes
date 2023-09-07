@@ -1,0 +1,25 @@
+<VirtualHost *:80>
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    Alias /static {{ andes_dir }}/staticfiles
+    <Directory {{ andes_dir }}/staticfiles>
+        Require all granted
+    </Directory>
+
+    Alias /media {{ andes_dir }}/media
+    <Directory {{ andes_dir }}/media>
+        Require all granted
+    </Directory>
+
+    <Directory {{ andes_dir }}/andes>
+        <Files wsgi.py>
+            Require all granted
+        </Files>
+    </Directory>
+
+    WSGIDaemonProcess andes python-path={{ andes_dir }} 
+    WSGIProcessGroup andes
+    WSGIScriptAlias / {{ andes_dir }}/andes/wsgi.py
+    TimeOut 25000
+</VirtualHost>
