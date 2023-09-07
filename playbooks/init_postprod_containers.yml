@@ -72,3 +72,11 @@
     ansible.builtin.hostname:
       name: "{{ item }}"
   
+  - name: Attach reverse proxy profile
+    with_items:
+    - "{{ groups['postprod'] }}"
+    lxd_container:
+        name: "{{ item }}"
+        profiles: 
+         - "andes-default"
+         - "{{ item }}-webproxy"
