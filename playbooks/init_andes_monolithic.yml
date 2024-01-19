@@ -1,0 +1,85 @@
+# This playbook will create a singel lxc container to host a monolthic Andes stack
+# The container is meant ot be used as a pre-prod instances
+
+# Specify the target host using:
+#  ansible-playbook playbooks/init_andes_monolithic.yml -e 'host=biodiversity'
+
+- hosts: localhost
+  connection: local
+  vars:
+    host: "'{{ host }}'"
+
+  tasks:
+
+  - name: Print var
+    ansible.builtin.debug:
+      msg: "host: {{ host }}"
+  - name: Print var
+    ansible.builtin.debug:
+      msg: "web_port: {{ hostvars[host]['web_port'] }}"
+  - name: Print var
+    ansible.builtin.debug:
+      msg: "db_port: {{ hostvars[host]['db_port'] }}"
+
+  - name: create proxy profile
+    community.general.lxd_profile:
+      name: "{{ host }}"
+      state: present
+      config: {}
+      description: "reverse web proxy on port {{ hostvars[host]['web_port'] }}"
+      devices:
+        hostport80:
+          connect: tcp:127.0.0.1:80
+          listen: "tcp:0.0.0.0:{{ hostvars[host]['web_port'] }}"
+          type: proxy
+        hostport3306:
+          connect: tcp:127.0.0.1:3306
+          listen: "tcp:0.0.0.0:{{ hostvars[host]['db_port'] }}"
+          type: proxy
+
+
+  # TODO: do not use the same profile, see github issue #3
+  - name: create default profile (for all containers)
+    community.general.lxd_profile:
+      name: andes-default
+      state: present
+      config:
+        limits.cpu: "4"
+        limits.memory: 8GB
+        limits.memory.swap: "true"
+      description: Default container instance profile
+      devices:
+        eth0:
+          name: eth0
+          network: lxdbr0
+          type: nic
+        root:
+          path: /
+          pool: default
+          size: 30GB
+          type: disk
+
+  - name: create containers
+    lxd_container:
+        name: "{{ host }}"
+        type: container
+        source:
+          type: image
+          mode: pull
+          server: https://images.linuxcontainers.org
+          protocol: simplestreams
+          alias: ubuntu/jammy/amd64
+        profiles: ["andes-default"]
+        state: started
+
+  - name: Set the hostnames
+    delegate_to: "{{ host }}"
+    ansible.builtin.hostname:
+      name: "{{ host }}"
+  
+  - name: Attach reverse proxy profile
+    lxd_container:
+        name: "{{ host }}"
+        profiles: 
+         - "andes-default"
+         - "{{ host }}"
