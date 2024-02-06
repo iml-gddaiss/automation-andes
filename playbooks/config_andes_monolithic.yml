@@ -18,6 +18,7 @@
     - name: Print var
       ansible.builtin.debug:
         msg: "host: {{ host }}"
+    - name: Print var
       ansible.builtin.debug:
         msg: "web_port: {{ hostvars[host]['web_port'] }}"
     - name: Print var
