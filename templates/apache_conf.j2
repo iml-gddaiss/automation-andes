@@ -21,5 +21,6 @@
     WSGIDaemonProcess andes python-path={{ andes_dir }} 
     WSGIProcessGroup andes
     WSGIScriptAlias / {{ andes_dir }}/andes/wsgi.py
+    WSGIApplicationGroup %{GLOBAL}
     TimeOut 25000
 </VirtualHost>
