@@ -116,8 +116,8 @@
         group: root
         dest: "/root/{{ fixture_filename }}"
 
-    - name: Import DB 
-      shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
+     - name: Import DB 
+       shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
 #### WEB
@@ -188,6 +188,22 @@
         dest: "/{{ andes_dir }}/.env"
         owner: root
         group: root
+
+    - name: Create the media directory 
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/media
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
+    - name: Create the media directory 
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/media/images
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
 
     - name: add tweak in settings.py
       ansible.builtin.lineinfile:
