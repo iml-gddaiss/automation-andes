@@ -1,0 +1,23 @@
+# 
+# for buccin
+
+vars:
+  hosts:
+    buccin:
+      fixture_filename: andes_v2.11_0f05f31d_IML2024TBD_2024_04_04_21_02_59_mysql.sql
+      web_port: 24011 # YEAR*1000 + MISSION NUM
+      db_port: 24989 # countdown (YEAR+1)*1000 - MISSION NUM
+      git_sha: 0f05f31d
+      host: buccin
+
+local:
+  hosts:
+    buccin:
+
+preprod:
+  hosts:
+    buccin:
+
+andes_monolithic:
+  hosts:
+    buccin:

@@ -116,7 +116,7 @@
         group: root
         dest: "/root/{{ fixture_filename }}"
 
-     - name: Import DB 
+    - name: Import DB 
        shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
@@ -181,6 +181,18 @@
     - name: pip install special requirements
       ansible.builtin.pip:
         requirements: "{{ andes_dir }}/special_requirements.txt"
+
+    # # mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
+    # - name: pip install mysql2sqlite
+    #   ansible.builtin.pip:
+    #     name: mysql-to-sqlite3
+
+    # # sqlite3 to allow servers on mysqlbackend to provide a sqlite3 backup option
+    # - name: pip install mysql2sqlite
+    #   apt:
+    #     update_cache: no
+    #     pkg: 
+    #       - sqlite3
 
     - name: write .env from jinja2 template
       ansible.builtin.template:
