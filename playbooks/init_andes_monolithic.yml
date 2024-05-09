@@ -26,7 +26,7 @@
       name: "{{ host }}"
       state: present
       config: {}
-      description: "reverse web proxy on port {{ hostvars[host]['web_port'] }}"
+      description: "reverse proxy on {{ hostvars[host]['web_port'] to {{host}}:80 and {{ hostvars[host]['db_port'] to {{host}}:3306 }}"
       devices:
         hostport80:
           connect: tcp:127.0.0.1:80
