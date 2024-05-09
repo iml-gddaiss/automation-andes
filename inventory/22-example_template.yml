@@ -1,0 +1,23 @@
+# 
+#  monolithic deployment for example_template
+
+vars:
+  hosts:
+    example_template: # <--- update this with new host name
+      fixture_filename: andes_v2.11_0f05f31d_2024_05_06_16_01_45_mysql.sql # place file under ./fixtures/
+      web_port: 26011 # LAST_TWO_YEAR_DIGITS*1000 + THREE_MISSION_NUM_DIGITS (example for 2026 011)
+      db_port: 26989 # countdown (LAST_TWO_YEAR_DIGITS+1)*1000 - THREE_MISSION_NUM_DIGITS (example for 2026 011)
+      git_sha: 0f05f31d # must match with fixture
+      host: example_template # <--- update this with new host name
+
+      db_user_password: ENTER_PASSWORD
+      db_rw_password: ENTER_OTHER_PASSWORD 
+      db_ro_password: ENTER_OTHER_OTHER_PASSWORD
+
+local:
+  hosts:
+    example_template: # <--- update this with new host name
+
+andes_monolithic:
+  hosts:
+    example_template: # <--- update this with new host name
