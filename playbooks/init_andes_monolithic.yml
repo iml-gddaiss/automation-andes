@@ -26,7 +26,7 @@
       name: "{{ host }}"
       state: present
       config: {}
-      description: "reverse proxy on {{ hostvars[host]['web_port'] to {{host}}:80 and {{ hostvars[host]['db_port'] to {{host}}:3306 }}"
+      description: "reverse proxy on {{ hostvars[host]['web_port'] }} to {{host}}:80 and {{ hostvars[host]['db_port'] }} to {{host}}:3306"
       devices:
         hostport80:
           connect: tcp:127.0.0.1:80
@@ -74,7 +74,7 @@
         profiles: ["andes-default"]
         state: started
 
-  - name: Set the hostnames
+  - name: Set the hostnames (you may have to run this twice!)
     delegate_to: "{{ host }}"
     ansible.builtin.hostname:
       name: "{{ host }}"

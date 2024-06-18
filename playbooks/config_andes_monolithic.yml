@@ -70,6 +70,7 @@
         enabled: true
 
     - name: create the database
+    #CREATE DATABASE andesdb CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
       mysql_db: 
         login_user: root
         login_password: "{{ db_root_password }}"
@@ -119,6 +120,7 @@
         dest: "/root/{{ fixture_filename }}"
 
     - name: Import DB 
+     # mysql andesdb < andes_v2.11_blablabla.sql
       shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
