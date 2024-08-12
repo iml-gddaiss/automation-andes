@@ -120,7 +120,8 @@
         dest: "/root/{{ fixture_filename }}"
 
     - name: Import DB 
-     # mysql andesdb < andes_v2.11_blablabla.sql
+      run_once: true # do not re-import on avery playbook execution
+     # mysql andesdb < andes_v2.11_blablabla.sql 
       shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
