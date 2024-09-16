@@ -175,6 +175,7 @@
         repo: git@github.com:dfo-gulf-science/andes.git
         force: true
         accept_hostkey: true
+        depth: 10 # just go back to the last 10 commits to save on size
         key_file: /root/.ssh/id_rsa_andes
         version: "{{ git_sha }}"
         dest: "{{ andes_dir }}/"
