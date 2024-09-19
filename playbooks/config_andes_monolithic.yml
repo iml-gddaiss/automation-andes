@@ -90,6 +90,17 @@
         priv: "{{ db_name }}.*:ALL,GRANT"
         state: present
 
+    - name: grant global PROCESS to the andes root user
+      mysql_user: 
+        login_user: root
+        login_password: "{{ db_root_password }}"
+        name: "{{ db_user_name }}"
+        password: "{{ db_user_password }}"
+        # restrict this user to localhost 
+        host: "localhost"
+        priv: "*.*:PROCESS"
+        state: present
+
     - name: create the a read-only user
       mysql_user: 
         login_user: root
