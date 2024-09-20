@@ -357,12 +357,19 @@
       command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
       # notify: Reload Apache
 
+
+    - name: Enable the Apache2 module headers (for cross-origin)
+      community.general.apache2_module:
+        state: present
+        name: headers
+    
     - name: Set up Apache 
       ansible.builtin.template:
         src: ../templates/apache_conf.j2
         dest: /etc/apache2/sites-available/000-default.conf
         owner: root
         group: root
+
 
     - name: Reload Apache 
       service:

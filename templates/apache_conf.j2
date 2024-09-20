@@ -10,6 +10,8 @@
     Alias /media {{ andes_dir }}/media
     <Directory {{ andes_dir }}/media>
         Require all granted
+        Header set Access-Control-Allow-Origin "*"
+
     </Directory>
 
     <Directory {{ andes_dir }}/andes>
