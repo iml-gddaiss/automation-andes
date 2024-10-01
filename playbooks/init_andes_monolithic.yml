@@ -47,6 +47,7 @@
         limits.cpu: "4"
         limits.memory: 8GB
         limits.memory.swap: "true"
+        security.protection.delete: "true"
       description: Default container instance profile
       devices:
         eth0:
