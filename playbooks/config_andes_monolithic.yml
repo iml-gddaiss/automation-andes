@@ -98,6 +98,7 @@
         password: "{{ db_user_password }}"
         # restrict this user to localhost 
         host: "localhost"
+        append_privs: true
         priv: "*.*:PROCESS"
         state: present
 
@@ -124,6 +125,8 @@
 #### FIXTURES
 
     - name: Copy fixtures 
+      run_once: true # do not copy on every playbook execution
+
       copy:
         src: "../fixtures/{{ fixture_filename }}"
         owner: root
@@ -131,7 +134,7 @@
         dest: "/root/{{ fixture_filename }}"
 
     - name: Import DB 
-      run_once: true # do not re-import on avery playbook execution
+      run_once: true # do not re-import on every playbook execution
      # mysql andesdb < andes_v2.11_blablabla.sql 
       shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 

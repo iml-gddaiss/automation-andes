@@ -48,7 +48,12 @@
         limits.memory: 8GB
         limits.memory.swap: "true"
         security.protection.delete: "true"
-      description: Default container instance profile
+        snapshots.expiry: "1w"
+        snapshots.schedule: "0 0 * * *"
+        snapshots.schedule.stopped: "false"
+        snapshots.pattern: "snapshot-{{ creation_date|date:'2006-01-02_15-04-05' }}"
+
+      description: Default Andes container profile
       devices:
         eth0:
           name: eth0
