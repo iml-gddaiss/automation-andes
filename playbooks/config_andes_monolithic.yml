@@ -209,17 +209,31 @@
       ansible.builtin.pip:
         requirements: "{{ andes_dir }}/special_requirements.txt"
 
-    # # mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
-    # - name: pip install mysql2sqlite
-    #   ansible.builtin.pip:
-    #     name: mysql-to-sqlite3
+    #### start mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
+    - name: git clong mysql2sqlite
+      git:
+        repo: https://github.com/dumblob/mysql2sqlite
+        accept_hostkey: true
+        depth: 10 # just go back to the last 10 commits to save on size
+        dest: "/opt/"
 
-    # # sqlite3 to allow servers on mysqlbackend to provide a sqlite3 backup option
-    # - name: pip install mysql2sqlite
-    #   apt:
-    #     update_cache: no
-    #     pkg: 
-    #       - sqlite3
+    - name: Change mysql2sqlite permissions
+      ansible.builtin.file:
+        path: /opt/mysql2sqlite/mysql2sqlite
+        state: touch
+        mode: u=rw,g=x,o=rw
+        owner: www-data
+        group: www-data
+
+    - name: Create a symbolic link
+      ansible.builtin.file:
+        src: /opt/mysql2sqlite/mysql2sqlite
+        dest: /usr/local/bin/mysql2sqlite
+        owner: root
+        group: www-data
+        state: link
+    
+    #### end mysql2sqlite
 
     - name: write .env from jinja2 template
       ansible.builtin.template:
@@ -244,11 +258,51 @@
         owner: www-data
         group: www-data
 
+    - name: Create the images directory 
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/_working
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
+    - name: Create the images directory
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/_working/backup
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
+    - name: Create the images directory
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/_working/backup/database
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
+    - name: Create the images directory
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/_working/log
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
+    - name: Create the images directory
+      ansible.builtin.file:
+        path: /{{ andes_dir }}/_working/tmp
+        state: directory
+        mode: '0755'
+        owner: www-data
+        group: www-data
+
     - name: Create the django log directory
       ansible.builtin.file:
           path: /var/log/django
           state: directory
-          mode: 0771 # go rwx
+          mode: 0771 # go rwx?
           group: www-data
 
 
@@ -260,7 +314,6 @@
         owner: www-data
         group: www-data
 
-        
     - name: add tweak in settings.py
       ansible.builtin.lineinfile:
         path: "{{ andes_dir}}/andes/settings.py"
