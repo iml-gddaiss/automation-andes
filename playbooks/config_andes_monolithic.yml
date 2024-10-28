@@ -210,12 +210,12 @@
         requirements: "{{ andes_dir }}/special_requirements.txt"
 
     #### start mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
-    - name: git clong mysql2sqlite
+    - name: git clone mysql2sqlite
       git:
         repo: https://github.com/dumblob/mysql2sqlite
         accept_hostkey: true
         depth: 10 # just go back to the last 10 commits to save on size
-        dest: "/opt/"
+        dest: "/opt/mysql2sqlite"
 
     - name: Change mysql2sqlite permissions
       ansible.builtin.file:
@@ -258,7 +258,7 @@
         owner: www-data
         group: www-data
 
-    - name: Create the images directory 
+    - name: Create the _working directory 
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working
         state: directory
@@ -266,7 +266,7 @@
         owner: www-data
         group: www-data
 
-    - name: Create the images directory
+    - name: Create the backup directory
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/backup
         state: directory
@@ -274,7 +274,7 @@
         owner: www-data
         group: www-data
 
-    - name: Create the images directory
+    - name: Create the database directory
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/backup/database
         state: directory
@@ -282,7 +282,7 @@
         owner: www-data
         group: www-data
 
-    - name: Create the images directory
+    - name: Create the log directory
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/log
         state: directory
@@ -304,7 +304,6 @@
           state: directory
           mode: 0771 # go rwx?
           group: www-data
-
 
     - name: Create the django log file
       ansible.builtin.file:

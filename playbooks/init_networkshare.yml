@@ -1,0 +1,65 @@
+# This playbook will create a single lxc container to host a Samba share and a webserver
+# The container is meant ot be used as a NAS for images, where the images are also served over http
+---
+
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  vars:
+    host: "'{{ host }}'"
+
+  tasks:
+
+  - name: Print var
+    ansible.builtin.debug:
+      msg: "host: {{ host }}"
+
+  - name: create default network share profile (for all containers)
+    community.general.lxd_profile:
+      name: networkshare-default
+      state: present
+      config:
+        limits.cpu: "4"
+        limits.memory: 8GB
+        limits.memory.swap: "true"
+        security.protection.delete: "true"
+        snapshots.expiry: "1w"
+        snapshots.schedule: "0 0 * * *"
+        snapshots.schedule.stopped: "false"
+        snapshots.pattern: "snapshot-{{ '{{' }} creation_date|date:'2006-01-02_15-04-05' {{ '}}' }}"
+
+      description: Default container instance profile for network share
+      devices:
+        eth0:
+          name: eth0
+          nictype: macvlan
+#          parent: eno1
+          parent: eno2
+          type: nic
+        eth1:
+          name: eth1
+          network: lxdbr0
+          type: nic
+        root:
+          path: /
+          pool: default
+          type: disk
+
+  - name: create containers
+    lxd_container:
+        name: "{{ host }}"
+        type: container
+        source:
+          type: image
+          mode: pull
+          server: https://cloud-images.ubuntu.com/releases/
+          protocol: simplestreams
+          alias: "22.04"
+        profiles: ["networkshare-default"]
+        state: started
+
+  - name: Set the hostnames (you may have to run this twice!)
+    delegate_to: "{{ host }}"
+    ansible.builtin.hostname:
+      name: "{{ host }}"
+  

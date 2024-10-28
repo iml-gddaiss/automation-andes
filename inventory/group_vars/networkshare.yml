@@ -1,0 +1,13 @@
+ansible_connection: lxd
+ansible_user: root
+ansible_become: no
+ansible_lxd_remote: local
+
+
+rw_user_name: lecture_ecriture # allow external, read-write
+rw_password: ENTER_RO_PASSWORD_HERE 
+
+ro_user_name: lecture_seulement # allow external, read-only
+ro_password: ENTER_RO_PASSWORD_HERE
+
+share_path: /srv/samba/share

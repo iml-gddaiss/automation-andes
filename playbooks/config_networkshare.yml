@@ -1,0 +1,98 @@
+# This playbook will create a singel lxc container to host a monolthic Andes stack
+# The container is meant ot be used as a post-prod instaces for post-prod validation
+# andes-web
+# andes-db
+# nginx-proxy
+---
+
+- hosts: '{{ host }}'
+  connection: local
+  tasks:
+
+
+    - name: Print vars
+      ansible.builtin.debug:
+        msg:
+          - "hotst: {{ host }}" 
+          - "rw_user_name:{{ rw_user_name }}"
+          - "rw_password: {{ rw_password }}"
+          - "ro_user_name:{{ ro_user_name }}"
+          - "ro_password: {{ ro_password }}"
+          - "share_path: {{ share_path }}"
+
+#### macvlan
+    - name: write netplan conf from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/networkshare.netplan.yaml.j2
+        dest: /etc/netplan/50-cloud-init.yaml
+        owner: root
+        group: root
+      notify: restart netplan
+
+#### Samba
+    - name: Install apt requirements
+      apt:
+        update_cache: yes
+        pkg: 
+          - samba
+        state: present
+
+    - name: Create samba group
+      group:
+        name: "samba"
+        state: "present"
+
+    - name: Create rw and ro users
+      user:
+        name: "{{ item }}"
+        shell: /sbin/nologin
+        append: yes
+        groups: samba
+        create_home: no
+      loop:
+        - "{{ rw_user_name }}"
+        - "{{ ro_user_name }}"
+
+    - name: Create share directory
+      file:
+        path: "{{ share_path }}"
+        state: directory
+        owner: root
+        group: samba
+        mode: "0770"
+
+    - name: add samba rw user password
+      shell: "smbpasswd -s -a {{ rw_user_name }}"
+      args:
+        stdin: "{{ rw_password }}\n{{ rw_password }}"
+
+    - name: add samba ro user password
+      shell: "smbpasswd -s -a {{ ro_user_name }}"
+      args:
+        stdin: "{{ ro_password }}\n{{ ro_password }}"
+
+    - name: config samba
+      blockinfile:
+        path: /etc/samba/smb.conf
+        block: |
+          [stockage]
+            comment = Partage de fichier
+            path = "{{ share_path }}"
+            browsable = yes
+            guest ok = no
+            read only = no
+            create mask = 0755
+            valid users = {{ rw_user_name }}, {{ ro_user_name }}
+            write list = {{ rw_user_name }}
+      notify: start smb service
+
+
+  handlers:
+
+    - name: restart netplan
+      shell: netplan apply
+
+    - name: start smb service
+      service:
+        name: smbd
+        state: started

@@ -51,7 +51,7 @@
         snapshots.expiry: "1w"
         snapshots.schedule: "0 0 * * *"
         snapshots.schedule.stopped: "false"
-        snapshots.pattern: "snapshot-{{ creation_date|date:'2006-01-02_15-04-05' }}"
+        snapshots.pattern: "snapshot-{{ '{{' }} creation_date|date:'2006-01-02_15-04-05' {{ '}}' }}"
 
       description: Default Andes container profile
       devices:
