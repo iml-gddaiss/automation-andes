@@ -1,0 +1,15 @@
+<VirtualHost *:80>
+
+  ErrorLog ${APACHE_LOG_DIR}/smb-error.log
+  CustomLog ${APACHE_LOG_DIR}/smb-access.log combined
+
+  DocumentRoot {{ share_path }}
+
+  <Directory {{ share_path }}>
+    Require all granted
+    Options  +Indexes
+    # allows CORS
+    Header set Access-Control-Allow-Origin "*"
+  </Directory>
+
+</VirtualHost>

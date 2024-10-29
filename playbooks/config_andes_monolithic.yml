@@ -436,7 +436,6 @@
         owner: root
         group: root
 
-
     - name: Reload Apache 
       service:
         name: apache2

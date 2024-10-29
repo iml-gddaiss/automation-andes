@@ -7,18 +7,17 @@ vars:
     iml-20XX-XXX: # <-- UPDATE HERE!
       year: "20XX"
       no_notif: "XXX"
-      fixture_filename: andes_v2.11_ac0fc1c4_2024_05_09_20_29_18_mysql.sql
+      fixture_filename: XXXXXX_mysql.sql
 
       web_port: "{{ ((( year|int)-2000)|int|abs) }}{{ no_notif}}"
       db_port: "{{ ((( year|int)-2000)|int|abs) }}{{ 1000-(no_notif|int|abs) }}"
-      git_sha: ac0fc1c4
-
+      git_sha: XXXXXX
 
 
 local:
   hosts:
-    iml-2023-012: # <-- UPDATE HERE!
+    iml-20XX-XXX: # <-- UPDATE HERE!
 
 andes_monolithic:
   hosts:
-    iml-2023-012: # <-- UPDATE HERE!
+    iml-20XX-XXX: # <-- UPDATE HERE!

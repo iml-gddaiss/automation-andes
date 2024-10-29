@@ -30,7 +30,7 @@
       notify: restart netplan
 
 #### Samba
-    - name: Install apt requirements
+    - name: Install Samba apt requirements
       apt:
         update_cache: yes
         pkg: 
@@ -80,12 +80,59 @@
             path = "{{ share_path }}"
             browsable = yes
             guest ok = no
-            read only = no
-            create mask = 0755
+            read only = yes
+            create mask = 0750
             valid users = {{ rw_user_name }}, {{ ro_user_name }}
             write list = {{ rw_user_name }}
       notify: start smb service
 
+    - name: Open firwall ports for Samba
+      community.general.ufw:
+          rule: allow
+          name: Samba
+          state: enabled
+
+#### Apache
+    - name: Install Apache2 apt requirements
+      apt:
+        update_cache: yes
+        pkg: 
+          - apache2
+        state: present
+
+    - name: Add samba group to www-data
+      user:
+        name: www-data
+        shell: /sbin/nologin
+        append: yes
+        groups: samba
+        create_home: no
+
+    - name: Enable the Apache2 module headers (for cross-origin)
+      community.general.apache2_module:
+        state: present
+        name: headers
+
+    - name: write netplan conf from jinja2 template
+      ansible.builtin.template:
+        src: ../templates/networkshare.apache2.conf.j2
+        dest: /etc/apache2/sites-available/samba.conf
+        owner: root
+        group: root
+
+    - name: Enable samba share
+      shell: /usr/sbin/a2ensite samba.conf
+      notify: Reload Apache
+
+    - name: Disable default Apache site
+      shell: /usr/sbin/a2dissite 000-default.conf
+      notify: Reload Apache
+
+    - name: Open firwall ports for http
+      community.general.ufw:
+        rule: allow
+        port: 80
+        state: enabled
 
   handlers:
 
@@ -96,3 +143,8 @@
       service:
         name: smbd
         state: started
+
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: reloaded

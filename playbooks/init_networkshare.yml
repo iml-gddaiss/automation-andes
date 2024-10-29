@@ -23,10 +23,13 @@
         limits.memory: 8GB
         limits.memory.swap: "true"
         security.protection.delete: "true"
+        # to delete, use
+        #  lxc config set CONTAINER_NAME security.protection.delete=false
         snapshots.expiry: "1w"
         snapshots.schedule: "0 0 * * *"
         snapshots.schedule.stopped: "false"
         snapshots.pattern: "snapshot-{{ '{{' }} creation_date|date:'2006-01-02_15-04-05' {{ '}}' }}"
+
 
       description: Default container instance profile for network share
       devices:
