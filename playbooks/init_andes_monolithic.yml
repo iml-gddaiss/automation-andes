@@ -48,6 +48,8 @@
         limits.memory: 8GB
         limits.memory.swap: "true"
         security.protection.delete: "true"
+        # to delete, use
+        #  lxc config set CONTAINER_NAME security.protection.delete=false
         snapshots.expiry: "1w"
         snapshots.schedule: "0 0 * * *"
         snapshots.schedule.stopped: "false"
