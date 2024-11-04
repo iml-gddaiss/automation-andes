@@ -23,21 +23,18 @@
         limits.memory: 8GB
         limits.memory.swap: "true"
         security.protection.delete: "true"
-        # to delete, use
-        #  lxc config set CONTAINER_NAME security.protection.delete=false
+        # to delete, run: `lxc config set CONTAINER_NAME security.protection.delete=false`
         snapshots.expiry: "1w"
         snapshots.schedule: "0 0 * * *"
         snapshots.schedule.stopped: "false"
         snapshots.pattern: "snapshot-{{ '{{' }} creation_date|date:'2006-01-02_15-04-05' {{ '}}' }}"
-
-
       description: Default container instance profile for network share
       devices:
         eth0:
           name: eth0
           nictype: macvlan
-#          parent: eno1
-          parent: eno2
+          parent: eno1
+          # parent: eno2
           type: nic
         eth1:
           name: eth1
@@ -60,9 +57,17 @@
           alias: "22.04"
         profiles: ["networkshare-default"]
         state: started
+    notify: restart container
 
   - name: Set the hostnames (you may have to run this twice!)
     delegate_to: "{{ host }}"
     ansible.builtin.hostname:
       name: "{{ host }}"
   
+
+  handlers:
+
+    - name: restart container
+      community.general.lxc_container:
+        name: "{{ host }}"
+        state: restarted

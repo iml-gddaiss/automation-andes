@@ -59,7 +59,7 @@
         state: directory
         owner: root
         group: samba
-        mode: "0770"
+        mode: "2770"
 
     - name: add samba rw user password
       shell: "smbpasswd -s -a {{ rw_user_name }}"
@@ -81,7 +81,7 @@
             browsable = yes
             guest ok = no
             read only = yes
-            create mask = 0750
+            create mask = 2754
             valid users = {{ rw_user_name }}, {{ ro_user_name }}
             write list = {{ rw_user_name }}
       notify: start smb service
