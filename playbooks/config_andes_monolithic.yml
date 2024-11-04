@@ -254,11 +254,21 @@
         requirements: "{{ andes_dir }}/special_requirements.txt"
 
     #### start mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
+    - name: Install sqlite3
+      tags:
+        - sqlite
+      apt:
+        update_cache: yes
+        pkg: 
+          - sqlite3
+        state: present
+
     - name: git clone mysql2sqlite
       tags:
         - sqlite
       git:
         repo: https://github.com/dumblob/mysql2sqlite
+        force: yes
         accept_hostkey: true
         depth: 10 # just go back to the last 10 commits to save on size
         dest: "/opt/mysql2sqlite"
@@ -269,7 +279,7 @@
       ansible.builtin.file:
         path: /opt/mysql2sqlite/mysql2sqlite
         state: touch
-        mode: u=rw,g=x,o=rw
+        mode: u=rx,g=rx,o=r
         owner: www-data
         group: www-data
 
