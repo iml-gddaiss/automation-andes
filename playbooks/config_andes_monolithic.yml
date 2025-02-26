@@ -146,25 +146,25 @@
 
 #### FIXTURES
 
-    - name: Copy fixtures 
-      tags:
-        - mysql
-        - fixture
-      run_once: true # do not copy on every playbook execution
+    # - name: Copy fixtures 
+    #   tags:
+    #     - mysql
+    #     - fixture
+    #   run_once: true # do not copy on every playbook execution
 
-      copy:
-        src: "../fixtures/{{ fixture_filename }}"
-        owner: root
-        group: root
-        dest: "/root/{{ fixture_filename }}"
+    #   copy:
+    #     src: "../fixtures/{{ fixture_filename }}"
+    #     owner: root
+    #     group: root
+    #     dest: "/root/{{ fixture_filename }}"
 
-    - name: Import DB 
-      tags:
-        - mysql
-        - fixture
-      run_once: true # do not re-import on every playbook execution
-     # mysql andesdb < andes_v2.11_blablabla.sql 
-      shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
+    # - name: Import DB 
+    #   tags:
+    #     - mysql
+    #     - fixture
+    #   run_once: true # do not re-import on every playbook execution
+    #  # mysql andesdb < andes_v2.11_blablabla.sql 
+    #   shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
 #### WEB
@@ -220,17 +220,17 @@
         group: root
         mode: 0644
 
-    - name: Git init, clone the repo
-      tags:
-        - django
-      git:
-        repo: git@github.com:dfo-gulf-science/andes.git
-        force: true
-        accept_hostkey: true
-        depth: 10 # just go back to the last 10 commits to save on size
-        key_file: /root/.ssh/id_rsa_andes
-        version: "{{ git_sha }}"
-        dest: "{{ andes_dir }}/"
+    # - name: Git init, clone the repo
+    #   tags:
+    #     - django
+    #   git:
+    #     repo: git@github.com:dfo-gulf-science/andes.git
+    #     force: true
+    #     accept_hostkey: true
+    #     depth: 10 # just go back to the last 10 commits to save on size
+    #     key_file: /root/.ssh/id_rsa_andes
+    #     version: "{{ git_sha }}"
+    #     dest: "{{ andes_dir }}/"
 
 
     - name: Add as system-wide safe directory
@@ -247,21 +247,16 @@
       ansible.builtin.pip:
         requirements: "{{ andes_dir }}/requirements.txt"
 
-    - name: pip install special requirements
-      tags:
-        - django
-      ansible.builtin.pip:
-        requirements: "{{ andes_dir }}/special_requirements.txt"
 
     #### start mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
-    - name: git clone mysql2sqlite
-      tags:
-        - sqlite
-      git:
-        repo: https://github.com/dumblob/mysql2sqlite
-        accept_hostkey: true
-        depth: 10 # just go back to the last 10 commits to save on size
-        dest: "/opt/mysql2sqlite"
+    # - name: git clone mysql2sqlite
+    #   tags:
+    #     - sqlite
+    #   git:
+    #     repo: https://github.com/dumblob/mysql2sqlite
+    #     accept_hostkey: true
+    #     depth: 10 # just go back to the last 10 commits to save on size
+    #     dest: "/opt/mysql2sqlite"
 
     - name: Change mysql2sqlite permissions
       tags:
@@ -269,8 +264,8 @@
       ansible.builtin.file:
         path: /opt/mysql2sqlite/mysql2sqlite
         state: touch
-        mode: u=rw,g=x,o=rw
-        owner: www-data
+        mode: u=r,g=rx,o=rwx
+        owner: root
         group: www-data
 
     - name: Create a symbolic link
@@ -297,6 +292,7 @@
     - name: Create the media directory 
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/media
         state: directory
@@ -307,6 +303,7 @@
     - name: Create the images directory 
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/media/images
         state: directory
@@ -317,6 +314,7 @@
     - name: Create the _working directory 
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working
         state: directory
@@ -327,6 +325,7 @@
     - name: Create the backup directory
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/backup
         state: directory
@@ -337,6 +336,7 @@
     - name: Create the database directory
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/backup/database
         state: directory
@@ -347,6 +347,7 @@
     - name: Create the log directory
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/log
         state: directory
@@ -357,6 +358,7 @@
     - name: Create the images directory
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /{{ andes_dir }}/_working/tmp
         state: directory
@@ -367,6 +369,7 @@
     - name: Create the django log directory
       tags:
         - django
+        - dir
       ansible.builtin.file:
           path: /var/log/django
           state: directory
@@ -376,6 +379,7 @@
     - name: Create the django log file
       tags:
         - django
+        - dir
       ansible.builtin.file:
         path: /var/log/django/django.log
         state: touch
