@@ -10,7 +10,7 @@ vars:
       fixture_filename: XXXXXX_mysql.sql
 
       web_port: "{{ ((( year|int)-2000)|int|abs) }}{{ no_notif}}"
-      db_port: "{{ ((( year|int)-2000)|int|abs) }}{{ 1000-(no_notif|int|abs) }}"
+      db_port: "{{ ((( year|int)-2000)|int|abs) }}{{ '{:03}'.format(1000-(no_notif|int|abs)) }}"
       git_sha: XXXXXX
 
 
