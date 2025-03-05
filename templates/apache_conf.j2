@@ -20,7 +20,7 @@
         </Files>
     </Directory>
 
-    WSGIDaemonProcess andes python-path={{ andes_dir }} 
+    WSGIDaemonProcess andes python-home={{ virtualenv_dir }} python-path={{ andes_dir }} 
     WSGIProcessGroup andes
     WSGIScriptAlias / {{ andes_dir }}/andes/wsgi.py
     WSGIApplicationGroup %{GLOBAL}

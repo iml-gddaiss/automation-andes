@@ -17,4 +17,8 @@ db_root_password: ENTER_ROOT_PASSWORD_HERE # db root, can only log-in from local
 db_name: andesdb
 db_port: 3306
 db_host: localhost
+
 andes_dir: /opt/andes
+virtualenv_dir: /var/www/andes
+python_path: /bin/python3.10
+# note, python path is relative to the virtua env, such that the absolute path is {{virtualenv_dir}}{{python_path}}

@@ -1,5 +1,5 @@
 CELERYD_NODES="worker1"
-CELERY_BIN="/usr/local/bin/celery"
+CELERY_BIN="{{ virtualenv_dir}}/bin/celery "
 CELERY_APP="andes"
 CELERYD_CHDIR="{{ andes_dir }}"
 CELERYD_LOG_LEVEL="ERROR"

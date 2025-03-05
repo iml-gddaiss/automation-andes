@@ -166,33 +166,33 @@
     #   shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
-#### WEB
+#### PYTHON
 
-    - name: Add repository for python 3.13
-      tags:
-        - django
-        - python
-      ansible.builtin.apt_repository:
-        repo: ppa:deadsnakes/ppa
-        state: present
-
-    - name: Install apt requirements
+    - name: Install python stuff from apt
       tags:
         - python
       apt:
         update_cache: yes
+        state: present
         pkg: 
-          - python3.13
-          - python3.13-dev
+          - pkg-config # to build pip's mysqlclient
+          - python3.10-venv
 
-    - name: Select Python 3.13
+    - name: make venv, pip install wheel, setuptools
       tags:
         - python
-      community.general.alternatives:
-        name: python
-        path: /usr/bin/python3.13
-        link: /usr/bin/python3
-        state: present
+      ansible.builtin.pip:
+        name: 
+          - setuptools
+          - wheel
+          - pip
+        extra_args: --upgrade
+        virtualenv: "{{ virtualenv_dir }}" 
+        virtualenv_command: "/usr/bin/python3.10 -m venv {{ virtualenv_dir }}"
+
+
+
+#### WEB
 
     - name: Install apt requirements
       tags:
@@ -203,19 +203,12 @@
           - git
           - apache2
           - libapache2-mod-wsgi-py3
-          - python3.13
-          - python3-pip
           - gettext 
-          - libapache2-mod-wsgi-py3
           - redis
           - default-libmysqlclient-dev
           # these are needed for printer
           - cups
           - libcups2-dev 
-          # these are required for building Pillow
-          # - python3.13-dev
-          # - python3-setuptools
-          # - libjpeg8-dev 
         state: present
 
     - name: Git init, make ssh dir
@@ -271,10 +264,12 @@
       tags:
         - django
       ansible.builtin.pip:
+        virtualenv: "{{ virtualenv_dir }}" 
+        virtualenv_command: "/usr/bin/python3.10 -m venv {{ virtualenv_dir }}"
         requirements: "{{ andes_dir }}/requirements.txt"
 
 
-    #### start mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
+    #### install mysql2sqlite to allow servers on mysqlbackend to provide a sqlite3 backup option
     - name: Install sqlite3
       tags:
         - sqlite
@@ -543,28 +538,28 @@
     - name: Django Check
       tags:
         - web
-      command: /usr/bin/python3 {{ andes_dir }}/manage.py check
+      command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py check"
 
     # migrate and loaddata are now longer needed if the sql file is loaded
     # - name: Django Migrate
     #   tags:
     #     - web
-    #   command: /usr/bin/python3 {{ andes_dir }}/manage.py migrate
+    #   command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py migrate"
 
     # - name: Django loaddata    
     #   tags:
     #     - web
-    #   command: "/usr/bin/python3 {{ andes_dir }}/manage.py loaddata {{ andes_dir }}/{{ fixture_filename }}"
+    #   command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py loaddata {{ andes_dir }}/{{ fixture_filename }}"
 
     - name: Django compilemessages
       tags:
         - web
-      command: /usr/bin/python3 {{ andes_dir }}/manage.py compilemessages
+      command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py compilemessages"
 
     - name: Django collectstatic
       tags:
         - web
-      command: /usr/bin/python3 {{ andes_dir }}/manage.py collectstatic --no-input
+      command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py collectstatic --no-input"
       # notify: Reload Apache
 
 

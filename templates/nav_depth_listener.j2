@@ -3,7 +3,7 @@ Description=Start the Listener for Navigation and Depth NMEA
 After=network.target
 
 [Service]
-ExecStart= /usr/bin/python3 {{ andes_dir }}/manage.py shell -c "from shared_models import tasks; tasks.listen_nav_and_depth()"
+ExecStart= {{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py shell -c "from shared_models import tasks; tasks.listen_nav_and_depth()"
 
 [Install]
 WantedBy=multi-user.target
