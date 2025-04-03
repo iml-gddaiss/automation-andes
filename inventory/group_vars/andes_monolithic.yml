@@ -8,7 +8,7 @@ db_user_name: andes_user # connection access restricted from local host (django 
 db_user_password: andes_user_password 
 
 db_rw_user_name: lecture_ecriture # allow external, read-write
-db_rw_password: ENTER_RO_PASSWORD_HERE 
+db_rw_password: ENTER_RW_PASSWORD_HERE 
 
 db_ro_user_name: lecture_seulement # allow external, read-only
 db_ro_password: ENTER_RO_PASSWORD_HERE
@@ -19,6 +19,6 @@ db_port: 3306
 db_host: localhost
 
 andes_dir: /opt/andes
-virtualenv_dir: /var/www/andes
+virtualenv_dir: /var/www/andes_venv
 python_path: /bin/python3.10
 # note, python path is relative to the virtua env, such that the absolute path is {{virtualenv_dir}}{{python_path}}

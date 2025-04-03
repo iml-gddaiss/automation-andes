@@ -157,13 +157,13 @@
         group: root
         dest: "/root/{{ fixture_filename }}"
 
-    # - name: Import DB 
-    #   tags:
-    #     - mysql
-    #     - fixture
-    #   run_once: True # do not re-import on every playbook execution
-    #  # mysql andesdb < andes_v2.11_blablabla.sql 
-    #   shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
+    - name: Import DB 
+      tags:
+        - mysql
+        - fixture
+      run_once: True # do not re-import on every playbook execution
+     # mysql andesdb < andes_v2.11_blablabla.sql 
+      shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
 
 
 #### PYTHON
@@ -175,8 +175,10 @@
         update_cache: yes
         state: present
         pkg: 
-          - pkg-config # to build pip's mysqlclient
           - python3.10-venv
+          - pkg-config # to build pip's mysqlclient
+          - python3.10-dev # to build some wheels (mysqlclient and pycups)
+
 
     - name: make venv, pip install wheel, setuptools
       tags:
@@ -238,15 +240,28 @@
         group: root
         mode: 0644
 
-    - name: Git init, clone the repo
-      run_once: True # do not clone on every playbook execution
+    # - name: Git init, clone the repo
+    #   tags:
+    #     - django
+    #   git:
+    #     repo: git@github.com:dfo-gulf-science/andes.git
+    #     force: true
+    #     accept_hostkey: true
+    #     depth: 3
+    #     key_file: /root/.ssh/id_rsa_andes
+    #     version: v3.5
+    #     dest: "{{ andes_dir }}/"
+
+
+    - name: Git init, checkout the SHA
       tags:
         - django
       git:
         repo: git@github.com:dfo-gulf-science/andes.git
         force: true
+        refspec: refs/*:refs/remotes/origin/*
+        depth: 1
         accept_hostkey: true
-        depth: 10 # just go back to the last 10 commits to save on size
         key_file: /root/.ssh/id_rsa_andes
         version: "{{ git_sha }}"
         dest: "{{ andes_dir }}/"

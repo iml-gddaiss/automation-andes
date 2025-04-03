@@ -1,0 +1,80 @@
+---
+
+- hosts: localhost
+  # run this task in the host
+  connection: local
+  vars:
+    host: "'{{ host }}'"
+
+  tasks:
+
+  - name: Print var
+    ansible.builtin.debug:
+      msg: "host: {{ host }}"
+
+  - name: create resource gateway share profile
+    community.general.lxd_profile:
+      name: ressource-gateway
+      state: present
+      config:
+        limits.cpu: "1"
+        limits.memory: 2GB
+        limits.memory.swap: "true"
+        security.protection.delete: "true"
+        # toggle to delete:  `lxc config set CONTAINER_NAME security.protection.delete=false`
+        user.network-config:
+          version: 2
+          ethernets:
+          eth0: # lxc network
+            dhcp: true
+            dhcp-identifier: mac
+          eth1: # private ressource
+            dhcp: true
+            dhcp-identifier: mac
+      description: Container profile for CMLD resource gateway
+      devices:
+        eth0:
+          name: eth0
+          network: lxdbr0
+          type: nic
+        eth1:
+          name: eth1
+          nictype: macvlan
+          parent: eno1 # choose the parent host NIC that goes to the private ressource
+          type: nic
+        eth2:
+          name: eth2
+          nictype: macvlan
+          parent: enx3c18a0228ff4 # choose the parent host NIC that goes to the DFO network
+          type: nic
+        root:
+          path: /
+          pool: default
+          type: disk
+
+  - name: create container
+    lxd_container:
+        name: "{{ host }}"
+        type: container
+        source:
+          type: image
+          mode: pull
+          server: https://cloud-images.ubuntu.com/releases/
+          protocol: simplestreams
+          alias: "22.04"
+        profiles: ["ressource-gateway"]
+        state: started
+    notify: restart container
+
+  - name: Set the hostnames (you may have to run this twice!)
+    delegate_to: "{{ host }}"
+    ansible.builtin.hostname:
+      name: "{{ host }}"
+  
+
+  handlers:
+    - name: restart container
+      community.general.lxc_container:
+        name: "{{ host }}"
+        state: restarted
+
