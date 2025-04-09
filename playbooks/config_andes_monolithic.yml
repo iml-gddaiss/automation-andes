@@ -192,6 +192,12 @@
         virtualenv: "{{ virtualenv_dir }}" 
         virtualenv_command: "/usr/bin/python3.10 -m venv {{ virtualenv_dir }}"
 
+    - name: add venv to .bashrc
+      tags: python
+      ansible.builtin.lineinfile:
+        path: "/root/.bashrc"
+        line: source {{ virtualenv_dir }}/bin/activate
+        state: present
 
 
 #### WEB
