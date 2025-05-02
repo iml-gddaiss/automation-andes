@@ -21,4 +21,4 @@ db_host: localhost
 andes_dir: /opt/andes
 virtualenv_dir: /var/www/andes_venv
 python_path: /bin/python3.10
-# note, python path is relative to the virtua env, such that the absolute path is {{virtualenv_dir}}{{python_path}}
+# note, python path is relative to the virtual env, such that the absolute path is {{virtualenv_dir}}{{python_path}}

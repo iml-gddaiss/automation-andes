@@ -2,7 +2,7 @@
 # The container is meant ot be used as a pre-prod instances
 
 # Specify the target host using:
-#  ansible-playbook playbooks/init_andes_monolithic.yml -e 'host=biodiversity'
+#  ansible-playbook playbooks/init_andes_monolithic.yml -e 'host=iml-2021-001'
 
 - hosts: localhost
   connection: local
@@ -36,7 +36,6 @@
           connect: tcp:127.0.0.1:3306
           listen: "tcp:0.0.0.0:{{ hostvars[host]['db_port'] }}"
           type: proxy
-
 
   # TODO: do not use the same profile, see github issue #3
   - name: create default profile (for all containers)

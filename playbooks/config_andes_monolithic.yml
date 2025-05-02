@@ -13,8 +13,6 @@
 
 #### DATABASE
 
-
-
     - name: Print var
       ansible.builtin.debug:
         msg: "host: {{ host }}"
@@ -43,7 +41,6 @@
         section: mysqld
         option: "{{ item.option }}"
         value: "{{ item.value }}"
-      # register: my_cnf
       with_items:
         # - { option: bind-address, value: localhost }
         # consider allowing external connections 
@@ -157,13 +154,31 @@
         group: root
         dest: "/root/{{ fixture_filename }}"
 
+    - name: Find out if the database was already loaded (look for ANDES tables)
+      tags:
+        - mysql
+        - fixture
+      command: >
+        mysql andesdb -e "show tables;"
+      register: andesdb_tables
+
+    # - name: Print var
+    #   tags:
+    #     - mysql
+    #     - fixture
+    #   ansible.builtin.debug:
+    #     msg: "web_port: {{ andesdb_tables.stdout.find('django_migrations') }}"
+
     - name: Import DB 
       tags:
         - mysql
         - fixture
-      run_once: True # do not re-import on every playbook execution
      # mysql andesdb < andes_v2.11_blablabla.sql 
       shell: "mysql {{ db_name }} < /root/{{ fixture_filename }}"
+      # look for django_migrations table to see if the DB has been loaded already
+      # only import the DB if it is not there
+      when: andesdb_tables.stdout.find('django_migrations') == -1
+
 
 
 #### PYTHON
@@ -246,17 +261,17 @@
         group: root
         mode: 0644
 
-    # - name: Git init, clone the repo
-    #   tags:
-    #     - django
-    #   git:
-    #     repo: git@github.com:dfo-gulf-science/andes.git
-    #     force: true
-    #     accept_hostkey: true
-    #     depth: 3
-    #     key_file: /root/.ssh/id_rsa_andes
-    #     version: v3.5
-    #     dest: "{{ andes_dir }}/"
+    - name: Git init, clone the repo
+      tags:
+        - django
+      git:
+        repo: git@github.com:dfo-gulf-science/andes.git
+        force: true
+        accept_hostkey: true
+        # depth: 3
+        key_file: /root/.ssh/id_rsa_andes
+        # version: v3.5
+        dest: "{{ andes_dir }}/"
 
 
     - name: Git init, checkout the SHA
@@ -265,8 +280,8 @@
       git:
         repo: git@github.com:dfo-gulf-science/andes.git
         force: true
-        refspec: refs/*:refs/remotes/origin/*
-        depth: 1
+        # refspec: refs/*:refs/remotes/origin/*
+        # depth: 1
         accept_hostkey: true
         key_file: /root/.ssh/id_rsa_andes
         version: "{{ git_sha }}"
@@ -572,10 +587,11 @@
     #     - web
     #   command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py loaddata {{ andes_dir }}/{{ fixture_filename }}"
 
-    - name: Django compilemessages
-      tags:
-        - web
-      command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py compilemessages"
+    # compile messages is not needed, since we now keep the .mo files in the repo
+    # - name: Django compilemessages
+    #   tags:
+    #     - web
+    #   command: "{{ virtualenv_dir }}{{ python_path }} {{ andes_dir }}/manage.py compilemessages"
 
     - name: Django collectstatic
       tags:
