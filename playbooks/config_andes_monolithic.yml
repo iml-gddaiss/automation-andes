@@ -453,19 +453,19 @@
         owner: www-data
         group: www-data
 
-    - name: add tweak in settings.py
-      tags:
-        - django
-      ansible.builtin.lineinfile:
-        path: "{{ andes_dir}}/andes/settings.py"
-        line: SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+    # - name: add tweak in settings.py
+    #   tags:
+    #     - django
+    #   ansible.builtin.lineinfile:
+    #     path: "{{ andes_dir}}/andes/settings.py"
+    #     line: SECURE_CROSS_ORIGIN_OPENER_POLICY = None
     
-    - name: add another tweak in settings.py
-      tags:
-        - django
-      ansible.builtin.lineinfile:
-        path: "{{ andes_dir}}/andes/settings.py"
-        line: CSRF_TRUSTED_ORIGINS = ['http://iml-science-4.ent.dfo-mpo.ca']
+    # - name: add another tweak in settings.py
+    #   tags:
+    #     - django
+    #   ansible.builtin.lineinfile:
+    #     path: "{{ andes_dir}}/andes/settings.py"
+    #     line: CSRF_TRUSTED_ORIGINS = ['http://iml-science-4.ent.dfo-mpo.ca']
 
   ### START setup CELERY
     - name: Ensure celery group exists
