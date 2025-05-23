@@ -132,3 +132,10 @@ This will wipe the database and restore whatever was in the backup. A backup wil
 # TODO:
 - time server
 - printer
+
+# Droits et Licence
+
+Sa Majesté le Roi du chef du Canada représentée par le ministre du ministère des Pêches et des Océans, 2025.
+
+MIT
+[Guide pour la publication du code source libre](https://www.canada.ca/fr/gouvernement/systeme/gouvernement-numerique/innovations-gouvernementales-numeriques/logiciels-libres/guide-pour-la-publication-du-code-source-libre.html)
