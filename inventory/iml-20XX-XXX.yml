@@ -8,6 +8,10 @@ vars:
       year: "20XX"
       no_notif: "XXX"
       fixture_filename: XXXXXX_mysql.sql
+      # sqlite3 fixtures need to be converted to sql dump first.
+      # sqlite3 my_db.db -batch ".dump" > my_db.sql
+      # make sure this is UTF-8 encoded, and  tweak the FOREIGN_KEY_CHECKS
+      # actually... sqlite fictures probably need to go through a json dumpdata/loaddata
 
       web_port: "{{ ((( year|int)-2000)|int|abs) }}{{ no_notif}}"
       db_port: "{{ ((( year|int)-2000)|int|abs) }}{{ '{:03}'.format(1000-(no_notif|int|abs)) }}"

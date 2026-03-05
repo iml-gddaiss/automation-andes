@@ -1,1 +1,4 @@
 files/id_rsa_andes
+
+fixtures/*
+inventory/*

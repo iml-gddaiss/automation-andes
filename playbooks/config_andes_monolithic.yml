@@ -147,12 +147,18 @@
       tags:
         - mysql
         - fixture
-      run_once: True # do not copy on every playbook execution
       copy:
         src: "../fixtures/{{ fixture_filename }}"
         owner: root
         group: root
         dest: "/root/{{ fixture_filename }}"
+
+    # - name: Find out if the fixture is in sqlite3 or SQL
+    #   tags:
+    #     - mysql
+    #     - fixture
+    #   ansible.builtin.set_fact:
+    #     fixture_format: "{{ fixture_filename | basename | splitext | last }}"
 
     - name: Find out if the database was already loaded (look for ANDES tables)
       tags:
@@ -193,6 +199,7 @@
           - python3.10-venv
           - pkg-config # to build pip's mysqlclient
           - python3.10-dev # to build some wheels (mysqlclient and pycups)
+          - unzip # useful to have around
 
 
     - name: make venv, pip install wheel, setuptools
