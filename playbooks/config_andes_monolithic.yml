@@ -236,6 +236,7 @@
           - gettext 
           - redis
           - default-libmysqlclient-dev
+          - libcairo2-dev
           # these are needed for printer
           - cups
           - libcups2-dev 

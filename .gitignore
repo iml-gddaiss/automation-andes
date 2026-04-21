@@ -1,4 +1,5 @@
 files/id_rsa_andes
 
+venv/**/*
 fixtures/*
 inventory/*
